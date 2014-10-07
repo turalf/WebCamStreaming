@@ -10,6 +10,8 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,36 +27,33 @@ import simplestream.Viewer;
 public class ClientConnection extends Thread {
 
     final static int SERVER_PORT = 6262;
+    static int   width = 320;
+    static int  height = 240;
+    public static void main(String... a) throws IOException {
+        Socket cs = new Socket("localhost", SERVER_PORT);
+        System.out.println("socket created");
+        DataInputStream ci = new DataInputStream(cs.getInputStream());
+        DataOutputStream co = new DataOutputStream(cs.getOutputStream());
+        
+        
+        //sending negotiaiton to the server
+        Message m = new Message(FieldValues.STARTSTREAM.getValue(), FieldValues.FORMAT.getValue(), width, height);
+        co.writeUTF(m.toJSONString());
+        
+        byte[] base64 = new byte[width * height * 3];
+        while (true) {
+            
+            byte [] msgBytes = new byte[base64.length + 2048];
+            ci.read(msgBytes);
+            System.out.println(new String(msgBytes));
+            Message sm = Message.parseJSONString(new String(msgBytes).trim());
 
-    public static void main(String... a) {
-        Viewer myViewer = new Viewer();
-        JFrame frame = new JFrame("Simple Stream Viewer");
-        frame.setVisible(true);
-        frame.setSize(160, 120);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(myViewer);
+            //decode an image
+            byte[] compressedImage = Base64.decodeBase64(base64);
+            //decompressing an image       
+            byte[] decompressedImage = Compressor.decompress(compressedImage);
 
-        try (Socket cs = new Socket("localhost", SERVER_PORT)) {
-            DataInputStream in = new DataInputStream(cs.getInputStream());
-            DataOutputStream out = new DataOutputStream(cs.getOutputStream());
-
-            out.writeUTF("This is a message from Client");
-            while (true) {
-                byte[] base64_image = new byte[65000];
-                in.read(base64_image);
-                System.out.println(base64_image);
-
-                byte[] nobase64_image = Base64.decodeBase64(base64_image);
-                /* Decompress the image */
-                byte[] decompressed_image = Compressor.decompress(nobase64_image);
-                /* Give the raw image bytes to the viewer. */
-                myViewer.ViewerInput(decompressed_image);
-                frame.repaint();
-
-            }
-
-        } catch (IOException ex) {
-            Logger.getLogger(ClientConnection.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(decompressedImage.length);
         }
 
     }

@@ -6,27 +6,36 @@ import java.awt.image.WritableRaster;
 
 import javax.swing.JPanel;
 
-public class Viewer extends JPanel{
+public class Viewer extends JPanel {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private BufferedImage image;
+    private int width = 320;
+    private int height = 240;
+    private static final long serialVersionUID = 1L;
+    private BufferedImage image;
 
     private int[] toIntArray(byte[] barr) {
-            int[] result = new int[barr.length];
-            for(int i=0;i<barr.length;i++)result[i]=barr[i];
-            return result;
+        int[] result = new int[barr.length];
+        for (int i = 0; i < barr.length; i++) {
+            result[i] = barr[i];
+        }
+        return result;
     }
 
     public Viewer() {
-    	image = new BufferedImage(160,120,BufferedImage.TYPE_3BYTE_BGR);
+        this.height = 320;
+        this.width = 240;
+        image = new BufferedImage(height, width, BufferedImage.TYPE_3BYTE_BGR);
     }
-    
-    public void ViewerInput(byte[] image_bytes){
-    	WritableRaster raster = image.getRaster();
-        raster.setPixels(0, 0, 160, 120, toIntArray(image_bytes));
+
+    public Viewer(int height, int width) {
+        this.height = height;
+        this.width = width;
+        image = new BufferedImage(height, width, BufferedImage.TYPE_3BYTE_BGR);
+    }
+
+    public void ViewerInput(byte[] image_bytes) {
+        WritableRaster raster = image.getRaster();
+        raster.setPixels(0, 0, height, width, toIntArray(image_bytes));
     }
 
     @Override
@@ -36,4 +45,3 @@ public class Viewer extends JPanel{
     }
 
 }
-
